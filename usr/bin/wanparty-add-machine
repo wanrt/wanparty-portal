@@ -1,0 +1,20 @@
+#!/usr/bin/php
+<?php
+
+if ($argc != 4 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
+?>
+  Utilisation :
+  <?php echo $argv[0]; ?> <ip> <user> <role>
+
+  <role> peut être ORGA ou ETUD
+
+<?php
+} else {
+    include_once('/var/www/https/auth/functions.inc.php');
+    $ip = $argv[1];
+    $mac = getMAC($ip);
+    $user = $argv[2];
+    $usertype = $argv[3];
+    Machine::create($ip, $mac, $user, $usertype);
+}
+?>

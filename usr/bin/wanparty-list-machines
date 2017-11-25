@@ -1,0 +1,17 @@
+#!/usr/bin/php
+<?php
+ 
+    include_once('/var/www/https/auth/functions.inc.php');
+    $machines = Machine::active();
+    foreach ($machines as  $machine) {
+       echo "$machine->user\t$machine->ip\t$machine->mac\t$machine->datetime\n";
+    }
+    echo "--------------------shorewall zone -------------------\n";
+    $zone = getZone();
+        $output = array();
+        exec("sudo shorewall show dynamic $zone ", $output);
+        foreach ($output as $line) {
+            echo $line . "\n";
+        }
+
+?>

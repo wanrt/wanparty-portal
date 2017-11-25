@@ -1,0 +1,19 @@
+#!/usr/bin/php
+<?php
+
+if ($argc != 2 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
+?>
+  Utilisation :
+  <?php echo $argv[0]; ?> <ip> 
+
+<?php
+} else {
+    include_once('/var/www/https/auth/functions.inc.php');
+    $ip = $argv[1];
+    $mac = getMAC($ip);
+   	$machine = new Machine($ip, $mac);
+   	#if($machine->isActive())
+   		$machine->disable();
+   	$machine->deny();
+}
+?>

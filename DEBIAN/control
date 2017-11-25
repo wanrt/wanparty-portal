@@ -1,0 +1,10 @@
+Source: wanparty-portal
+Section: unknown
+Priority: extra
+Maintainer: Sohaib Lafifi <sohaib.lafifi@univ-artois.fr>
+Homepage: wanparty.neticien.net
+Package: wanparty-portal
+Version: 1.11.11.1
+Architecture: all
+Depends: php7.0-cli, php7.0-gd, php7.0, php7.0-ldap, php7.0-mcrypt,libapache2-mod-php7.0, ethtool,tcpdump, iperf, sudo, wanparty-ldap, php7.0-sqlite3
+Description: installation du portail d'auth sur le serveur local de la wan
