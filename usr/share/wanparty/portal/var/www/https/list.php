@@ -12,15 +12,13 @@ if($current->isActive()){
     $logedin = true;
 }
 
-
-
 if(!$logedin){
     header( "Location: https://" . $_SERVER['SERVER_ADDR'] . "/auth/login.php");
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
 
@@ -90,24 +88,35 @@ if(!$logedin){
       <th>IP</th>
       <th>Joueur</th>
       <th>MAC</th>
+      <th>Thpt</th>
       <th>Connecté depuis </th>
       <th>Type </th>
     </tr>
   </thead>
   <tbody>
      <?php
+    $current = Machine::current();
     $machines = Machine::active();
 
     foreach ($machines as  $machine) {
-      if($machine->usertype == 'ORGA' ) echo "<!--";
-       echo "<tr>
-      <th scope='row'>$machine->ip</th>
-      <td>$machine->user</td>
-      <td>$machine->mac</td>
-      <td>$machine->datetime</td>
-      <td>$machine->usertype</td>
-    </tr>";
-    if($machine->usertype == 'ORGA' ) echo "-->";
+      if($current->usertype == 'ORGA' ){
+        if($machine->banned) echo "<tr  class='table-danger'>"; 
+        else echo '<tr>';
+
+      }else{
+        if($machine->usertype == 'ORGA') continue;
+        if($machine->banned) echo "<tr  class='table-danger'>"; 
+        else echo '<tr>';
+      }
+      echo "
+        <th scope='row'>$machine->ip</th>
+        <td>$machine->user</td>
+        <td>$machine->mac</td>
+        <td>" . (($machine->ntop)?$machine->ntop->thpt:"-") ."</td>
+        <td>$machine->datetime</td>
+        <td>$machine->usertype</td>
+        </tr>";
+      
     }
   ?>
    

@@ -29,10 +29,6 @@ if(!$logedin && isset($_POST['umail']) && isset($_POST['upass']) && strlen($_POS
   $strerror = "Entrez des identifiants valides !";
 }
 
-
-
-
-
 $current = Machine::current();
 if($current->isActive()){
   $current->authorize(); // in case! good To synchronize the two catalogs

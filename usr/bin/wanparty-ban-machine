@@ -13,7 +13,6 @@ if ($argc != 2 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
     $mac = getMAC($ip);
    	$machine = new Machine($ip, $mac);
    	#if($machine->isActive())
-   	$machine->disable();
-   	$machine->deny();
+   	$machine->ban();
 }
 ?>

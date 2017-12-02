@@ -7,6 +7,7 @@ $DB = '/var/www/data/auth.db';
 //   `user`  TEXT NOT NULL,
 //   `usertype`  TEXT,
 //   `active`  INTEGER DEFAULT 1,
+//   `banned`  INTEGER DEFAULT 1,
 //   `datetime`  TEXT,
 //   `extrafiled`  TEXT,
 //   `extravalue`  TEXT
@@ -37,6 +38,7 @@ class Machine
         $instance->authorize(); 
         return $instance;
     }
+
     public static function current(){
         $instance = new self(getIP(), getMAC());
         return $instance;
@@ -44,13 +46,14 @@ class Machine
 
     public function save(){
         global $DB;
-        $query = "INSERT INTO machines (mac, ip, user, usertype, active, datetime) VALUES('$this->mac', '$this->ip', '$this->user' , '$this->usertype', 1, '" . date('c') . "');";
+        $query = "INSERT INTO machines (mac, ip, user, usertype, active, banned, datetime) VALUES('$this->mac', '$this->ip', '$this->user' , '$this->usertype', 1, 0, '" . date('c') . "');";
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
         $insert = $db->exec($query);
         $this->id = $db->lastInsertRowID();
         $db->close();
         return $insert;
     }
+
     private function isSaved(){
         global $DB;
         $query = "SELECT * FROM machines WHERE mac='$this->mac' AND ip='$this->ip';";
@@ -66,11 +69,12 @@ class Machine
         }
         return false;
     }
+    
     public function isActive(){
         global $DB;
         $query = "SELECT * FROM machines WHERE mac='$this->mac' AND ip='$this->ip' AND active=1;";
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
-         $machine = $db->querySingle($query, true);
+        $machine = $db->querySingle($query, true);
         $db->close();
         if($machine && !empty($machine)){
           $this->id = $machine['id'];
@@ -81,21 +85,24 @@ class Machine
         }
         return false;
     }
+
     public  function activate(){
         $saved = $this->isSaved();
         if(($saved && $saved['active'] == 1)) return true;
-        if(($saved && $saved['user'] == $this->user)){
-            global $DB;
-            $query = "UPDATE machines SET active = 1 WHERE id=$saved[id];";
-            $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
-            $queryDisable  = "UPDATE machines SET active=0 WHERE ip='$saved[ip]';";
-            $update = $db->exec($queryDisable);
+        if(!($saved && $saved['user'] == $this->user)){
+            $saved = $this->save();
+        }
+        global $DB;
+        $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
 
-            $update = $db->exec($query);
-            $db->close();
-            return $update;
-        }else
-          return $this->save();
+        // disable other auths within the same machine
+        $queryDisable  = "UPDATE machines SET active=0 WHERE ip='$saved[ip]';";
+        $db->exec($queryDisable);
+
+        $query = "UPDATE machines SET active = 1 WHERE id=$saved[id];";            
+        $update = $db->exec($query);
+        $db->close();
+        return $update;        
     }
 
     public  function disable(){
@@ -103,27 +110,52 @@ class Machine
         $access = date("d/m/Y H:i:s");
         syslog(LOG_INFO, "Remove machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
         closelog();
-        $query = "UPDATE machines SET active=0 WHERE ip='$this->ip';";
+        $active = $this->isActive();
+        if($active){
+          global $DB;
+          $query = "UPDATE machines SET active=0 WHERE ip='$this->ip';";
+          $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
+          $update = $db->exec($query);
+          return $update;
+        }
+        return $this->isSaved();
+    }
+
+    public  function ban(){
+        openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
+        $access = date("d/m/Y H:i:s");
+        syslog(LOG_INFO, "Ban machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        closelog();
+        global $DB;
+        $query = "UPDATE machines SET banned=1 WHERE ip='$this->ip';";
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
-        $db->exec($query);
-        $saved = $this->isActive();
-        if($saved){
-            global $DB;
-            $query = "UPDATE machines SET active=0 WHERE id = $this->id;";
-            $query = "UPDATE machines SET active=0 WHERE ip='$this->ip';";
-            $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
-            $update = $db->exec($query);
-            $db->close();
-            return $update;
-        }else
-          return true;
+        $update = $db->exec($query);
+        $output = array();
+        exec("sudo shorewall drop ". $this->ip, $output);
+        sleep(5);
+        return $update;
+    }
+
+    public  function unban(){
+        openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
+        $access = date("d/m/Y H:i:s");
+        syslog(LOG_INFO, "Unban machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        closelog();
+        global $DB;
+        $query = "UPDATE machines SET banned=0 WHERE ip='$this->ip';";
+        $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
+        $update = $db->exec($query);
+        $output = array();
+        exec("sudo shorewall allow ". $this->ip, $output);
+        sleep(5);
+        return $update;
     }
 
     public  function authorize(){
         $output = array();
         $zone = getZone();
         exec("sudo shorewall add $zone ". $this->ip, $output);
-        sleep(3);
+        sleep(5);
         foreach ($output as $line) {
             if (strpos($line, 'added to zone') !== false) {
                return true;
@@ -141,6 +173,7 @@ class Machine
         sleep(3);
         return true;
     }
+
     public function isAuthorized(){
         $zone = getZone();
         $output = array();
@@ -153,7 +186,30 @@ class Machine
         return false;
     }
 
+    public static function ntopMachines(){
+      $curl = curl_init();
+      curl_setopt_array($curl, array(
+        CURLOPT_URL => "http://127.0.0.1:3000/lua/wanparty.lua?mode=local&version=4",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => array("cookie: user=nologin"),
+      ));
+      $response = curl_exec($curl);
+      $err = curl_error($curl);
+      curl_close($curl);
+      $ntop_machines = array();
+      if ($err) {
+         return $ntop_machines;
+      } else {
+        $data = json_decode($response)->data;    
+        foreach($data as $host){
+                $ntop_machines[$host->ip] = $host;          
+        }
+      }
+      return $ntop_machines;
+    }
+    
     public static function active(){
+        $ntop_machines = Machine::ntopMachines();
         $machines = array();
         $query = "SELECT * FROM machines WHERE  active=1;";
         global $DB;
@@ -166,6 +222,8 @@ class Machine
             $machine->usertype = $dbmachine['usertype'];
             $machine->datetime = $dbmachine['datetime'];
             $machine->id = $dbmachine['id'];
+            $machine->banned = $dbmachine['banned'];
+            $machine->ntop = $ntop_machines[$dbmachine['ip']];
             $machines[] = $machine;
         }
         $db->close();
