@@ -95,7 +95,6 @@ if(!$logedin){
   </thead>
   <tbody>
      <?php
-    $current = Machine::current();
     $machines = Machine::active();
 
     foreach ($machines as  $machine) {

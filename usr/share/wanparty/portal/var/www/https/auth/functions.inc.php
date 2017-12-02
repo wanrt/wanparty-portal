@@ -28,7 +28,7 @@ class Machine
     public static function create($ip, $mac, $user, $usertype){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Add machine {$ip}:{$mac}:{$user} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        syslog(LOG_INFO, "Add machine {$ip}:{$mac}:{$user} : $access ");
         closelog();
 
         $instance = new self($ip, $mac);
@@ -108,7 +108,7 @@ class Machine
     public  function disable(){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Remove machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        syslog(LOG_INFO, "Remove machine {$this->ip}:{$this->mac} : $access ");
         closelog();
         $active = $this->isActive();
         if($active){
@@ -124,7 +124,7 @@ class Machine
     public  function ban(){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Ban machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        syslog(LOG_INFO, "Ban machine {$this->ip}:{$this->mac} : $access ");
         closelog();
         global $DB;
         $query = "UPDATE machines SET banned=1 WHERE ip='$this->ip';";
@@ -139,7 +139,7 @@ class Machine
     public  function unban(){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Unban machine {$this->ip}:{$this->mac} : $access ({$_SERVER['HTTP_USER_AGENT']})");
+        syslog(LOG_INFO, "Unban machine {$this->ip}:{$this->mac} : $access ");
         closelog();
         global $DB;
         $query = "UPDATE machines SET banned=0 WHERE ip='$this->ip';";
