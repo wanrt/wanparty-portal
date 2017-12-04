@@ -19,4 +19,7 @@ root	ALL=(ALL:ALL) ALL
 
  
 www-data        ALL=(root)NOPASSWD:/sbin/shorewall
+www-data        ALL=(root)NOPASSWD:/usr/sbin/arp
+
+
 

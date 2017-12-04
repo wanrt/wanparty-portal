@@ -99,12 +99,13 @@ class Machine
         if (($saved && $saved['active'] == 1)) return true;
         if (!($saved && $saved['user'] == $this->user)) {
             $saved = $this->save();
+            $saved = $this->isSaved();
         }
         global $DB;
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
 
         // disable other auths using the same machine
-        $queryDisable = "UPDATE machines SET active=0 WHERE ip='$saved[ip]';";
+        $queryDisable = "UPDATE machines SET active=0 WHERE ip='$this->ip';";
         $db->exec($queryDisable);
 
         $query = "UPDATE machines SET active = 1 WHERE id=$saved[id];";
@@ -240,7 +241,7 @@ class Machine
             $machine->datetime = $dbmachine['datetime'];
             $machine->id = $dbmachine['id'];
             $machine->banned = $dbmachine['banned'];
-            $machine->ntop = $ntop_machines[$dbmachine['ip']];
+            $machine->ntop = (isset($ntop_machines[$dbmachine['ip']]))?:null;
             $machines[] = $machine;
         }
         $db->close();
@@ -267,7 +268,7 @@ function getMAC($ip = '')
     if ($ip == '') $ip = getIP();
     @system('ping -W 1 -c 1 ' . $ip . ' > /dev/null 2>&1');
     $lines = array();
-    $arp = exec("arp -a $ip", $lines);
+    $arp = exec("/usr/sbin/arp -a $ip", $lines);
     foreach ($lines as $line) {
         $cols = preg_split('/\s+/', trim($line));
         if ($cols[1] == "($ip)")
