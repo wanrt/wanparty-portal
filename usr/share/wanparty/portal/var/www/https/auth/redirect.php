@@ -7,6 +7,10 @@ document.location="https://<?php echo $_SERVER['SERVER_ADDR']; ?>/auth/login.php
 </script>
 </head>
 <body>
-<h2><center><a href="https://<?php echo $_SERVER['SERVER_ADDR']; ?>/auth/login.php">Authentification WAN-RT</a></center></h2>
+<h2>
+    <div style="text-align: center;">
+        <a href="https://<?php echo $_SERVER['SERVER_ADDR']; ?>/auth/login.php">Authentification WAN-RT</a>
+    </div>
+</h2>
 </body>
 </html>
