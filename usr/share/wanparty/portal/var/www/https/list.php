@@ -15,6 +15,20 @@ if($current->isActive()){
 if(!$logedin){
     header( "Location: https://" . $_SERVER['SERVER_ADDR'] . "/auth/login.php");
 }
+if($current->usertype == 'ORGA' &&
+    isset($_GET['action']) && isset($_GET['ip'])) {
+    $ip = htmlspecialchars($_GET['ip'], ENT_QUOTES, 'UTF-8');
+    $action = htmlspecialchars($_GET['action'], ENT_QUOTES, 'UTF-8');
+    if($action == "ban"){
+        Machine::ban($ip);
+        $message = "Utilisateur $ip banni" ;
+    }
+    if($action == "unban"){
+        Machine::unban($ip);
+        $message = "Utilisateur $ip n'est plus banni" ;
+    }
+
+}
 ?>
 
 <!DOCTYPE html>
@@ -82,6 +96,10 @@ if(!$logedin){
     <!-- Page Content -->
     <div class="container">
         <div class="row">
+            <?php 
+            if($message){
+                ?><div class="alert alert-success"><?php echo $message;?></div>
+            <?php } ?>
             <table class="table">
   <thead class="thead-inverse">
     <tr>
@@ -91,6 +109,7 @@ if(!$logedin){
       <th>Thpt</th>
       <th>Connecté depuis </th>
       <th>Type </th>
+      <?php if($current->usertype == 'ORGA' ) echo "<th>Action</th>"; ?>
     </tr>
   </thead>
   <tbody>
@@ -113,8 +132,14 @@ if(!$logedin){
         <td>$machine->mac</td>
         <td>" . (($machine->ntop)?$machine->ntop->thpt:"-") ."</td>
         <td>$machine->datetime</td>
-        <td>$machine->usertype</td>
-        </tr>";
+        <td>$machine->usertype</td>"; 
+        if($current->usertype == 'ORGA' ) {
+            if($machine->banned) 
+                echo "<td><a href='list.php?action=unban&ip=$machine->ip' class='btn btn-success' role='button'>débannir</a></td>"; 
+            else 
+                echo "<td><a href='list.php?action=ban&ip=$machine->ip' class='btn btn-danger' role='button'>Bannir</a></td>"; 
+        }
+        echo "</tr>";
       
     }
   ?>

@@ -10,9 +10,6 @@ if ($argc != 2 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
 } else {
     include_once('/var/www/https/auth/functions.inc.php');
     $ip = $argv[1];
-    $mac = getMAC($ip);
-   	$machine = new Machine($ip, $mac);
-   	#if($machine->isActive())
-   	$machine->unban();
+   	Machine::unban($ip);
 }
 ?>

@@ -17,6 +17,8 @@ if($current->isActive()){
 if(!$logedin){
 		header( "Location: https://" . $_SERVER['SERVER_ADDR'] . "/auth/login.php");
 }
+
+
 ?>
 
 <!DOCTYPE html>

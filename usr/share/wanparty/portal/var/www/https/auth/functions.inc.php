@@ -121,32 +121,32 @@ class Machine
         return $this->isSaved();
     }
 
-    public  function ban(){
+    public  static function ban($ip){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Ban machine {$this->ip}:{$this->mac} : $access ");
+        syslog(LOG_INFO, "Ban machine $ip : $access ");
         closelog();
         global $DB;
-        $query = "UPDATE machines SET banned=1 WHERE ip='$this->ip';";
+        $query = "UPDATE machines SET banned=1 WHERE ip='$ip';";
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
         $update = $db->exec($query);
         $output = array();
-        exec("sudo shorewall drop ". $this->ip, $output);
+        exec("sudo shorewall drop ". $ip, $output);
         sleep(5);
         return $update;
     }
 
-    public  function unban(){
+    public  static function unban($ip){
         openlog("PORTAL ", LOG_PID | LOG_PERROR | LOG_NDELAY, LOG_LOCAL2);
         $access = date("d/m/Y H:i:s");
-        syslog(LOG_INFO, "Unban machine {$this->ip}:{$this->mac} : $access ");
+        syslog(LOG_INFO, "Unban machine $ip : $access ");
         closelog();
         global $DB;
-        $query = "UPDATE machines SET banned=0 WHERE ip='$this->ip';";
+        $query = "UPDATE machines SET banned=0 WHERE ip='$ip';";
         $db = new SQLite3($DB, SQLITE3_OPEN_READWRITE);
         $update = $db->exec($query);
         $output = array();
-        exec("sudo shorewall allow ". $this->ip, $output);
+        exec("sudo shorewall allow ". $ip, $output);
         sleep(5);
         return $update;
     }
