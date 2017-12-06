@@ -106,6 +106,7 @@ if ($current->usertype == 'ORGA' &&
                 <th>Joueur</th>
                 <th>MAC</th>
                 <th>Thpt</th>
+                <th>Trafic</th>
                 <th>Connecté depuis</th>
                 <th>Type</th>
                 <?php if ($current->usertype == 'ORGA') echo "<th>Action</th>"; ?>
@@ -132,6 +133,7 @@ if ($current->usertype == 'ORGA' &&
         <td>$machine->user</td>
         <td>$machine->mac</td>
         <td>" . (($machine->ntop) ? $machine->ntop->thpt : "-") . "</td>
+        <td>" . (($machine->ntop) ? ($machine->ntop->traffic_sent . ' - ' . $machine->ntop->traffic_rcvd)  : "-") . "</td>
         <td>$machine->datetime</td>
         <td>$machine->usertype</td>";
                 if ($current->usertype == 'ORGA') {

@@ -241,7 +241,7 @@ class Machine
             $machine->datetime = $dbmachine['datetime'];
             $machine->id = $dbmachine['id'];
             $machine->banned = $dbmachine['banned'];
-            $machine->ntop = (isset($ntop_machines[$dbmachine['ip']]))?:null;
+            $machine->ntop = (isset($ntop_machines[$dbmachine['ip']]))?$ntop_machines[$dbmachine['ip']]:null;
             $machines[] = $machine;
         }
         $db->close();
